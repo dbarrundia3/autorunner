@@ -15,7 +15,7 @@ Follow this instructions and you will never have to worry about spending hours g
   * Make sure to download the *grades.csv* file that comes inside the download.
 2. Unzip the download in your working directory (i.e Documents/CS1301/)
 3. Move the autograder to the homework directory (i.e Documents/CS1301/HW4)
-4. Download AutoRunner.py [here](test.com) and move it to the homework directory (i.e Documents/CS1301/HW4)
+4. Download [AutoRunner.py](https://github.com/dbarrundia3/autorunner/archive/master.zip) and move it to the homework directory (i.e Documents/CS1301/HW4)
 4. Make sure **grades.csv** is in your submission directory. (i.e Documents/CS1301/HW4/grades.csv)
 5. You should see something like this arquitecture:</br>
 * /HW4
