@@ -1,8 +1,6 @@
-import os
-import csv
-import getopt
-import sys
 """
+Execute a unittest or any python script in every student directory based on Georgia Tech's T-Square Download Architecture
+
 Overall structure of T-Square Download Assignment
     +---------------------------------------+
     | /HW # - Description                   |
@@ -20,6 +18,17 @@ Overall structure of T-Square Download Assignment
     |     .                                 |
     +---------------------------------------+
 """
+
+import os
+import csv
+import getopt
+import sys
+
+__author__  = "Daniel Barrundia"
+__version__ = "2.0"
+__email__   = "dbarrundia3@gatech.edu"
+__date__    = "October, 2016"
+
 class AutoRunner(object):
     def __init__(self, test_file, file_with_id):
         """
@@ -28,10 +37,9 @@ class AutoRunner(object):
                 file_with_id:  is where we have our info for each student
         """
         self.test_file = test_file
-        self.file_to_test = file_to_test
         self.file_with_id = file_with_id
-        self.parent_directory = os.getcwd()
-        self.directories = self.clean_directories()
+        self.parent_directory = self.clean_path(os.getcwd())
+        self.directories = self.add_subdir()
 
     def run(self):
         count = 0.0
@@ -42,21 +50,20 @@ class AutoRunner(object):
             count += 1
             path =  os.path.join(self.parent_directory,self.directories[index])
             if index == 0:
-                # To start, move the test file to the first directory. #
+            # To start, move the test file to the first directory. (1st stud) #
                 os.system('mv {0} {1}'.format(self.test_file, path))
 
             os.system('cd {0} && python3 {1}'.format(path, self.test_file))
 
             if index == len(self.directories) - 1:
-                # If it's the last directory, move the test file back to the first directory. #
-                #first_path = os.path.join(self.parent_directory,self.directories[0])
+            # If last directory, move test file back to parentt directory. #
                 os.system('cd {0} && mv {1} {2}'.format(path, self.test_file, self.parent_directory))
             else:
                 # Just move the test to the next student #
                 next_path = os.path.join(self.parent_directory, self.directories[index + 1], self.test_file)
                 os.system('cd {0} && mv {1} {2}'.format(path, self.test_file, next_path))
 
-    def clean_directories(self):
+    def add_subdir(self):
         """
         Return: list[str] contains the names of the clean directories for each student based on how t-square formats the directories, add the sub directory of Submission attachment(s):
                 last, first(128-bit ID) / Submission attachment(s)
@@ -68,15 +75,25 @@ class AutoRunner(object):
             #     Burdell, George(3b6499dca6f092bbbfaf2d4ab2c89836)      #
             # ----------------------------------------------------------- #
             _dir = os.path.join(name,sub_dir)
-            _dir = _dir.replace(',','\,')
-            _dir = _dir.replace(' ', '\ ')
-            _dir = _dir.replace('(', '\(').replace(')', '\)')
+            _dir = self.clean_path(_dir)
             # --------  our directory name should look like: ------------ #
             #     Burdell\,\ George\(3b6499dca6f092bbbfaf2d4ab2c89836)/   #
             #                                Submission\ attachment\(s\)/ #
             # ----------------------------------------------------------- #
             directories.append(_dir)
         return directories
+
+    def clean_path(self, path):
+        """
+        Parameters:
+        path: str - path to clean
+
+        Return: str which is the path cleaned, by adding a backslash to special characters.
+        """
+        path = path.replace(',','\,')
+        path = path.replace(' ', '\ ')
+        path = path.replace('(', '\(').replace(')', '\)')
+        return path
 
     def make_students_directories(self):
         """
