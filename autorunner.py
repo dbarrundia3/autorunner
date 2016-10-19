@@ -25,7 +25,7 @@ import getopt
 import sys
 
 __author__  = "Daniel Barrundia"
-__version__ = "2.0"
+__version__ = "2.1"
 __email__   = "dbarrundia3@gatech.edu"
 __date__    = "October, 2016"
 
@@ -102,6 +102,12 @@ class AutoRunner(object):
         with open(self.file_with_id, 'rt') as f:
             csvReader = csv.reader(f)
             namesList = []
+            if next(csvReader) and len(next(csvReader))==0:
+                # Skip headers from grades.csv if headers exist
+                next(csvReader)
+            else:
+                # Headers have been removed, read from start
+                f.seek(0)
             for row in csvReader:
             # --------------  file_with_id looks like: ------------------ #
             # gburdel3,3b6499dca6f092bbbfaf2d4ab2c89836,Burdell, George   #
@@ -114,8 +120,7 @@ class AutoRunner(object):
             #     /Burdell, George(3b6499dca6f092bbbfaf2d4ab2c89836)      #
             # ----------------------------------------------------------- #
                 namesList.append(name)
-            f.close()
-            return namesList
+        return namesList
 
 
 if __name__ == "__main__":
