@@ -23,6 +23,8 @@ import os
 import csv
 import getopt
 import sys
+import argparse
+import textwrap
 
 __author__  = "Daniel Barrundia"
 __version__ = "2.1"
@@ -30,14 +32,15 @@ __email__   = "dbarrundia3@gatech.edu"
 __date__    = "October, 2016"
 
 class AutoRunner(object):
-    def __init__(self, test_file, file_with_id):
+    def __init__(self, test_file, file_with_id, dependencies):
         """
             Parameters:
-                test_file:     is the filename of the tester.
-                file_with_id:  is where we have our info for each student
+                test_file:     is the filename of the tester/autograder.
+                file_with_id:  is the filename of student's information.
         """
         self.test_file = test_file
         self.file_with_id = file_with_id
+        self.dependencies = dependencies
         self.parent_directory = self.clean_path(os.getcwd())
         self.directories = self.add_subdir()
 
@@ -52,16 +55,24 @@ class AutoRunner(object):
             if index == 0:
             # To start, move the test file to the first directory. (1st stud) #
                 os.system('mv {0} {1}'.format(self.test_file, path))
+                for dependency in self.dependencies:
+                    os.system('mv {0} {1}'.format(dependency, path))
 
             os.system('cd {0} && python3 {1}'.format(path, self.test_file))
-
+            for dependency in self.dependencies:
+                os.system('cd {0} && python3 {1}'.format(path, dependency))
             if index == len(self.directories) - 1:
             # If last directory, move test file back to parentt directory. #
                 os.system('cd {0} && mv {1} {2}'.format(path, self.test_file, self.parent_directory))
+                for dependency in self.dependencies:
+                    os.system('cd {0} && mv {1} {2}'.format(path, dependency, self.parent_directory))
+
             else:
                 # Just move the test to the next student #
-                next_path = os.path.join(self.parent_directory, self.directories[index + 1], self.test_file)
-                os.system('cd {0} && mv {1} {2}'.format(path, self.test_file, next_path))
+                next_path = os.path.join(self.parent_directory, self.directories[index + 1])
+                os.system('cd {0} && mv {1} {2}'.format(path, self.test_file, os.path.join(next_path,self.test_file)))
+                for dependency in self.dependencies:
+                    os.system('cd {0} && mv {1} {2}'.format(path, dependency, os.path.join(next_path,dependency)))
 
     def add_subdir(self):
         """
@@ -97,7 +108,8 @@ class AutoRunner(object):
 
     def make_students_directories(self):
         """
-        Return: list[str] with the names of the directories for each student based on how T-square formats the directories: last, first(128-bit ID)
+        Return: list[str] with the names of the directories for each student
+        based on how T-square formats the directories: last, first(128-bit ID)
         """
         with open(self.file_with_id, 'rt') as f:
             csvReader = csv.reader(f)
@@ -122,18 +134,28 @@ class AutoRunner(object):
                 namesList.append(name)
         return namesList
 
+def get_args():
+    """"""
+    parser = argparse.ArgumentParser(
+        description = "How to execute autorunner?",
+        formatter_class = argparse.RawDescriptionHelpFormatter,
+        epilog=textwrap.dedent("""
+        Example Usages:
+            python3 autorunner.py -t hw4_autograder.py
+            python3 autorunner.py -t hw4_autograder.py -d helper1.py -d helper2.py
+            python3 autorunner.py -t hw4_autograder.py -g rename_grades.csv
+        """)
+    )
+
+    # required argument
+    parser.add_argument('-t', action="store", required=True,
+        help='filename of the tester/autograder', dest = 'test_filename')
+    # optional arguments
+    parser.add_argument('-g', help="csv filename of student's information", default= 'grades.csv', dest = 'grades_filename')
+    parser.add_argument('-d', help='filename of a dependency', default = [], action = "append", dest = 'dependencies')
+    return (parser.parse_args())
 
 if __name__ == "__main__":
-    argv = sys.argv[1:]
-    test_filename     = ''
-    grades_filename   = 'grades.csv'
-
-    options, r = getopt.getopt(argv, 't:g', ['test=','grades='])
-    for opt, arg in options:
-        if opt in ('-t', '--test'):
-            test_filename = arg
-        elif opt in ('-g', '--grades'):
-            grades_filename = arg
-
-    runner = AutoRunner(test_file = test_filename, file_with_id = grades_filename)
+    args = get_args()
+    runner = AutoRunner(test_file = args.test_filename, file_with_id = args.grades_filename, dependencies = args.dependencies)
     runner.run()
