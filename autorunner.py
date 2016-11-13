@@ -56,11 +56,10 @@ class AutoRunner(object):
             # To start, move the test file to the first directory. (1st stud) #
                 os.system('mv {0} {1}'.format(self.test_file, path))
                 for dependency in self.dependencies:
+                    # Make the dependencies follow the test file.
                     os.system('mv {0} {1}'.format(dependency, path))
 
             os.system('cd {0} && python3 {1}'.format(path, self.test_file))
-            for dependency in self.dependencies:
-                os.system('cd {0} && python3 {1}'.format(path, dependency))
             if index == len(self.directories) - 1:
             # If last directory, move test file back to parentt directory. #
                 os.system('cd {0} && mv {1} {2}'.format(path, self.test_file, self.parent_directory))
