@@ -37,6 +37,8 @@ class AutoRunner(object):
             Parameters:
                 test_file:     is the filename of the tester/autograder.
                 file_with_id:  is the filename of student's information.
+                dependencies:  a list of filenames that must be in the cwd
+                               before executing the script.
         """
         self.test_file = test_file
         self.file_with_id = file_with_id
@@ -48,12 +50,13 @@ class AutoRunner(object):
         count = 0.0
         for index in range(len(self.directories)):
             # Progress report #
-            sys.stdout.write("Progress: {:.2f}%\r".format((count / len(self.directories)) * 100))
+            progress = (count / len(self.directories)) * 100
+            sys.stdout.write("Progress: {:.2f}%\r".format(progress))
             sys.stdout.flush()
             count += 1
             path =  os.path.join(self.parent_directory,self.directories[index])
             if index == 0:
-            # To start, move the test file to the first directory. (1st stud) #
+            # To start, move the test file to the first directory. (1st stud)
                 os.system('mv {0} {1}'.format(self.test_file, path))
                 for dependency in self.dependencies:
                     # Make the dependencies follow the test file.
@@ -61,9 +64,10 @@ class AutoRunner(object):
 
             os.system('cd {0} && python3 {1}'.format(path, self.test_file))
             if index == len(self.directories) - 1:
-            # If last directory, move test file back to parentt directory. #
+            # If last dir (last stud), move test file back to parent directory.
                 os.system('cd {0} && mv {1} {2}'.format(path, self.test_file, self.parent_directory))
                 for dependency in self.dependencies:
+                    # Make the dependencies follow the test file.
                     os.system('cd {0} && mv {1} {2}'.format(path, dependency, self.parent_directory))
 
             else:
@@ -71,11 +75,12 @@ class AutoRunner(object):
                 next_path = os.path.join(self.parent_directory, self.directories[index + 1])
                 os.system('cd {0} && mv {1} {2}'.format(path, self.test_file, os.path.join(next_path,self.test_file)))
                 for dependency in self.dependencies:
+                    # Make the dependencies follow the test file.
                     os.system('cd {0} && mv {1} {2}'.format(path, dependency, os.path.join(next_path,dependency)))
 
     def add_subdir(self):
         """
-        Return: list[str] contains the names of the clean directories for each student based on how t-square formats the directories, add the sub directory of Submission attachment(s):
+        Return: a list of strings. Contains the names of the clean directories for each student based on how t-square formats the directories, add the sub directory of Submission attachment(s):
                 last, first(128-bit ID) / Submission attachment(s)
         """
         directories = []
@@ -101,6 +106,7 @@ class AutoRunner(object):
         Return: str which is the path cleaned, by adding a backslash to special characters.
         """
         path = path.replace(',','\,')
+        path = path.replace("'","\\'")
         path = path.replace(' ', '\ ')
         path = path.replace('(', '\(').replace(')', '\)')
         return path
